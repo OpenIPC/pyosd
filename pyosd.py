@@ -65,6 +65,7 @@ class TransparentWindow(Gtk.Window):
         self.thr_label.override_color(Gtk.StateFlags.NORMAL, Gdk.RGBA(1, 1, 1, 1)) 
         self.roll_label = Gtk.Label(label=" ROLL")
         self.roll_label.override_color(Gtk.StateFlags.NORMAL, Gdk.RGBA(1, 1, 1, 1)) 
+        self.roll_label.get_style_context().add_class("osd-label")
         self.pitch_label = Gtk.Label(label=" PITCH")
         self.pitch_label.override_color(Gtk.StateFlags.NORMAL, Gdk.RGBA(1, 1, 1, 1)) 
         self.alt_label = Gtk.Label(label=" ALT")
@@ -75,8 +76,10 @@ class TransparentWindow(Gtk.Window):
         
         # Set up the layout with a horizontal box
         rssi_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=0)
-        rssi_box.pack_start(rssi_icon, True, True, 0)
-        rssi_box.pack_start(self.rssi_label, True, True, 0)
+        self.rssi_spase = Gtk.Box(spacing=0)
+        rssi_box.pack_start(self.rssi_spase, False, True, 0)
+        rssi_box.pack_start(rssi_icon, False, True, 0)
+        rssi_box.pack_start(self.rssi_label, False, True, 0)
         
         thr_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=0)
         thr_box.pack_start(thr_icon, False, False, 0)
@@ -96,7 +99,8 @@ class TransparentWindow(Gtk.Window):
         
         self.bat_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=0)
         self.bat_box.pack_start(self.bat_icon, False, False, 0)
-        self.bat_box.pack_start(self.battery_label, False, False, 0)
+        self.bat_box.pack_start(self.battery_label, True, True, 0)
+        self.bat_box.set_size_request(250, 0)
 
         self.fly_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=0)
         self.fly_box.pack_start(fly_icon, False, False, 0)
@@ -110,7 +114,6 @@ class TransparentWindow(Gtk.Window):
         self.speed_box.pack_end(self.speed_label, False, False, 0)
         self.speed_box.pack_end(speed_icon, False, False, 0)
         
-
         # sticks boxes
         self.stick1_frame = Gtk.Frame()
         self.stick1_frame.get_style_context().add_class("white-border")  # Add a CSS class for styling
@@ -126,10 +129,12 @@ class TransparentWindow(Gtk.Window):
 
         self.sticks_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=10)
         self.sticks_space = Gtk.Box(spacing=0)
-        self.sticks_space.set_size_request(150, 0)
+        self.sticks_space2 = Gtk.Box(spacing=0)
+        self.sticks_space.set_size_request(100, 0)
         self.sticks_box.pack_start(self.sticks_space, False, False, 0)
         self.sticks_box.pack_start(self.stick1_frame, False, False, 0)
         self.sticks_box.pack_start(self.stick2_frame, False, False, 0)
+        self.sticks_box.pack_start(self.sticks_space2, True, True, 0)
         
         # Pack labels in the desired order and position
         # openipc logo
@@ -148,8 +153,8 @@ class TransparentWindow(Gtk.Window):
         self.camera_label.set_alignment(0, 0.5)
         self.battery_label.set_alignment(0, 0.5)
         self.thr_label.set_alignment(0, 0.5)
-        self.rssi_label.set_alignment(0, 0.5)
-        rssi_icon.set_alignment(1, 0.5)
+        self.rssi_label.set_alignment(0.5, 0.5)
+        rssi_icon.set_alignment(0.5, 0.5)
         self.alt_label.set_alignment(0, 0.5)
         self.speed_label.set_alignment(0, 0.5)
         self.stick1_icon.set_alignment(0, 0)
@@ -167,7 +172,6 @@ class TransparentWindow(Gtk.Window):
         vbox_right.pack_end(self.speed_box, False, False, 0)
         vbox_right.pack_end(self.alt_box, False, False, 0)
         
-        
         self.add(hbox)
 
         self.mavlink_connection = mavutil.mavlink_connection('udpin:224.0.0.1:14550')
@@ -175,6 +179,7 @@ class TransparentWindow(Gtk.Window):
 
         # Start a timer for updating OSD information
         self.update_osd()
+        self.update_window()
 
         # Connect to the window's configure-event to handle resizing
         self.connect("configure-event", self.on_configure_event)
@@ -251,11 +256,10 @@ class TransparentWindow(Gtk.Window):
         if self.start_time is not None:
             armed_time = time.time() - self.start_time
             self.armtime_label.set_text(' %02u:%02u' % (int(armed_time)/60, int(armed_time)%60))
-            
-                
-        # Update every 5ms
-        GLib.timeout_add(5, self.update_osd)
 
+        # Update every 5ms
+        GLib.timeout_add(10, self.update_osd)
+        
     def on_configure_event(self, widget, event):
         # Adjust label font size based on window width
         width = event.width
@@ -273,6 +277,8 @@ class TransparentWindow(Gtk.Window):
         self.flightmode_label.override_font(font_desc)
         self.alt_label.override_font(font_desc)
         self.speed_label.override_font(font_desc)
+        self.rssi_spase.set_size_request(width/8, 0)
+        
     
     def load_css(self):
         # Load CSS file for custom styling
@@ -282,6 +288,11 @@ class TransparentWindow(Gtk.Window):
         context = Gtk.StyleContext()
         context.add_provider_for_screen(screen, css_provider,
                                         Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+        
+    def update_window(self):
+        self.hide()
+        self.show()
+        GLib.timeout_add(100, self.update_window) # every 0.1s erase the afterimage of osd elements
     
 if __name__ == "__main__":
     win = TransparentWindow()
