@@ -6,7 +6,7 @@ import time, math
 
 class TransparentWindow(Gtk.Window):
     def __init__(self):
-        Gtk.Window.__init__(self, title="pyOSD for OpenIPC FPV")
+        Gtk.Window.__init__(self, title="pyosd for OpenIPC FPV")
         self.set_default_size(400, 200)
 
         # Make the window transparent
@@ -65,7 +65,6 @@ class TransparentWindow(Gtk.Window):
         self.thr_label.override_color(Gtk.StateFlags.NORMAL, Gdk.RGBA(1, 1, 1, 1)) 
         self.roll_label = Gtk.Label(label=" ROLL")
         self.roll_label.override_color(Gtk.StateFlags.NORMAL, Gdk.RGBA(1, 1, 1, 1)) 
-        self.roll_label.get_style_context().add_class("osd-label")
         self.pitch_label = Gtk.Label(label=" PITCH")
         self.pitch_label.override_color(Gtk.StateFlags.NORMAL, Gdk.RGBA(1, 1, 1, 1)) 
         self.alt_label = Gtk.Label(label=" ALT")
@@ -179,7 +178,7 @@ class TransparentWindow(Gtk.Window):
 
         # Start a timer for updating OSD information
         self.update_osd()
-        self.update_window()
+        #self.update_window()
 
         # Connect to the window's configure-event to handle resizing
         self.connect("configure-event", self.on_configure_event)
@@ -292,7 +291,7 @@ class TransparentWindow(Gtk.Window):
     def update_window(self):
         self.hide()
         self.show()
-        GLib.timeout_add(100, self.update_window) # every 0.1s erase the afterimage of osd elements
+        #GLib.timeout_add(100, self.update_window) # every 0.1s erase the afterimage of osd elements
     
 if __name__ == "__main__":
     win = TransparentWindow()
